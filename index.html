@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="GitHub.io : Publising Site">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>GitHub.io</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/FHasbani/github.io">View on GitHub</a>
+
+          <h1 id="project_title">GitHub.io</h1>
+          <h2 id="project_tagline">Publising Site</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/FHasbani/github.io/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/FHasbani/github.io/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <p>&lt;!DOCTYPE html&gt;</p>
+
+<p></p>
+
+<p></p>
+
+<p>
+
+</p>
+
+<p></p>
+
+<p></p>PLM Coursera WriteUp
+
+
+
+<p>
+
+</p>
+
+
+
+code{white-space: pre;}
+
+<p></p>
+
+
+
+
+  pre:not([class]) {
+    background-color: white;
+  }
+
+
+
+
+<p></p>
+
+<p></p>
+
+
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+<div>
+
+
+<div id="header">
+<h1>
+<a id="plm-coursera-writeup" class="anchor" href="#plm-coursera-writeup" aria-hidden="true"><span class="octicon octicon-link"></span></a>PLM Coursera WriteUp</h1>
+<h4>
+<a id="frank-hasbani" class="anchor" href="#frank-hasbani" aria-hidden="true"><span class="octicon octicon-link"></span></a><em>Frank Hasbani</em>
+</h4>
+<h4>
+<a id="saturday-november-22-2014" class="anchor" href="#saturday-november-22-2014" aria-hidden="true"><span class="octicon octicon-link"></span></a><em>Saturday, November 22, 2014</em>
+</h4>
+</div>
+
+<div id="plm-project">
+<h1>
+<a id="plm-project" class="anchor" href="#plm-project" aria-hidden="true"><span class="octicon octicon-link"></span></a>PLM Project</h1>
+<div id="background">
+<h2>
+<a id="background" class="anchor" href="#background" aria-hidden="true"><span class="octicon octicon-link"></span></a>Background</h2>
+<p>Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: <a href="http://groupware.les.inf.puc-rio.br/har">http://groupware.les.inf.puc-rio.br/har</a> (see the section on the Weight Lifting Exercise Dataset).</p>
+</div>
+
+<div id="executive-summary">
+<h2>
+<a id="executive-summary" class="anchor" href="#executive-summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>Executive Summary</h2>
+<p>The objective of this project is to build a Machine Learning Model that predicts the ‘classe’ of excercises that an individual followed, based on their captured activity quality from their individual monitors. The “classe” variable is one provided in the training set to help train the Model. We use any of the other variables to predict with. This report describes how we built this Model, how we used cross validation, what we think the expected out of sample error is, and why the basis on which we made the choices to build it. As a proof of suucessful prediction, we will also use the same prediction model to predict 20 different test cases.</p>
+<div id="loading-the-data">
+<h3>
+<a id="loading-the-data" class="anchor" href="#loading-the-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Loading the Data</h3>
+<p>The training data for this project are available here: <a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv</a></p>
+<p>The test data are available here: <a href="https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv">https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv</a></p>
+<p>We load the needed libraries, check is the Training and Testing files already exist, otherwise we download them from the source. Also in this process, we reset all of the “#DIV/0!”, “”, " “, values in the data to”NA:</p>
+<pre><code>library(caret); library(ISLR); library(ggplot2); library(rgl); library(rpart);library(randomForest);library(corrplot); library(randomForest); library(rpart.plot); library(prodlim); library(tree); library(knitr)</code></pre>
+<pre><code>## Loading required package: lattice
+## Loading required package: ggplot2
+## randomForest 4.6-10
+## Type rfNews() to see new features/changes/bug fixes.</code></pre>
+<pre><code>##Download the data and read into file
+
+if (!file.exists("pml-Training.csv")) {
+     download.file("http://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", 
+                   destfile = "pml-Training.csv")
+}
+if (!file.exists("pml-Testing.csv")) {
+     download.file("http://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", 
+                   destfile = "pml-Testing.csv")
+}
+## Save files and format NAs
+
+training &lt;- read.table("pml-training.csv", header=T, sep=",", na.strings = c("#DIV/0!", "", " ", "NA"))
+testing &lt;- read.csv("pml-Testing.csv", header = T, na.strings = c("#DIV/0!", "", " ", "NA"))</code></pre>
+<p>The resulting tables are of the following dimensions:</p>
+<pre><code>## [1] 19622   160</code></pre>
+<pre><code>## [1]  20 160</code></pre>
+</div>
+
+<div id="cleansing-the-data">
+<h3>
+<a id="cleansing-the-data" class="anchor" href="#cleansing-the-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Cleansing the Data</h3>
+<p>Clean ALL of the data sets of NAs, eliminate Zero Sums, and remove character Columns such as (“X”,“user_name”,“raw_timestamp_part_1”,“raw_timestamp_part_2”,“cvtd_timestamp”,“new_window” “windows) etc..:</p>
+</div>
+
+<div id="exploratory-analysis">
+<h3>
+<a id="exploratory-analysis" class="anchor" href="#exploratory-analysis" aria-hidden="true"><span class="octicon octicon-link"></span></a>Exploratory Analysis</h3>
+<p>Correlation and Principal Component Analysis :</p>
+<pre><code>## [1] 14718    53</code></pre>
+<pre><code>## [1] 4904   53</code></pre>
+<pre><code>## [1] 20 53</code></pre>
+<p><img title alt width="672"><img title alt width="672"><img title alt width="672"></p>
+</div>
+
+<div id="building-the-model">
+<h3>
+<a id="building-the-model" class="anchor" href="#building-the-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Building the Model</h3>
+<p>We attempted a umber of approaches to build the model, some were less successful, while others were process extensive without producing better results. Below are the two we chose with their respective resultes in Accuracy, Kappa and Error Rate:</p>
+<pre><code># 
+set.seed(1975)
+# ctrl &lt;- trainControl(method="cv", number=5, allowParallel = TRUE)
+# rpart Model
+rpartModel &lt;- rpart(trSet$classe~., data=trSet[, -53], control=rpart.control(cp=0.01))
+prp(rpartModel, type = 4, box.col=5, leaf.round=1, tweak = 2, compress = TRUE)</code></pre>
+<p><img title alt width="672"></p>
+<pre><code># randomForest Model
+rfModel &lt;- randomForest(classe ~ ., data = trSet, proximity = T, importance = T) 
+varImpPlot(rfModel, pch = 20, cex = 0.8, main =  "Variable Importance" )</code></pre>
+<p><img title alt width="672"></p>
+<pre><code>###################################################################################################
+# This code below was abandonned due to slow processing without producing an improved results
+# rpModel &lt;- train(trSet$classe~., data=trSet[, -53], method = "rpart", preProcess = c("center", "scale"), trControl = ctrl, tuneLength = 3)
+# predictionRp&lt;- predict(rpModel, valSet, type = "raw")
+# confusionMatrix(predictionRp, valSet$classe)
+# PRp$overall[1:2]
+# print(PRp)
+# rfModel &lt;- train(trSet$classe ~ ., data = trSet[, -53], method = "rf", trControl = ctrl, tuneLength = 3) 
+# 
+# predictionRF &lt;- predict(rfModel, newdata = valSet, type = "raw")
+# PRf&lt;-(confusionMatrix(predictionRF, valSet$classe))
+# print(PRf[2:3])
+#########################################################################################################</code></pre>
+</div>
+
+<div id="cross-validating-the-model">
+<h3>
+<a id="cross-validating-the-model" class="anchor" href="#cross-validating-the-model" aria-hidden="true"><span class="octicon octicon-link"></span></a>Cross Validating the Model</h3>
+<pre><code>#####  rpart Model
+rpartPredict &lt;- predict(rpartModel, valSet, type = "class")
+PRpart &lt;- confusionMatrix(rpartPredict, valSet$classe)
+#####  randomForest Model
+predictionRF &lt;- predict(rfModel, newdata = valSet, type = "class")
+prf&lt;-(confusionMatrix(predictionRF, valSet$classe))</code></pre>
+<p>The accuracy of this model is 99.5%, so we estimate the Out of Sample Error to be 0.5%</p>
+<pre><code>PRpart$overall</code></pre>
+<pre><code>##       Accuracy          Kappa  AccuracyLower  AccuracyUpper   AccuracyNull 
+##   7.065661e-01   6.284996e-01   6.935998e-01   7.192860e-01   2.844617e-01 
+## AccuracyPValue  McnemarPValue 
+##   0.000000e+00   1.708144e-84</code></pre>
+<pre><code># print(PRpart)
+print(prf[2:3])</code></pre>
+<pre><code>## $table
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 1394    5    0    0    0
+##          B    0  941    4    0    0
+##          C    0    3  851    7    0
+##          D    0    0    0  796    0
+##          E    1    0    0    1  901
+## 
+## $overall
+##       Accuracy          Kappa  AccuracyLower  AccuracyUpper   AccuracyNull 
+##      0.9957178      0.9945829      0.9934616      0.9973473      0.2844617 
+## AccuracyPValue  McnemarPValue 
+##      0.0000000            NaN</code></pre>
+</div>
+
+<div id="the-best-model-selection-decision">
+<h3>
+<a id="the-best-model-selection-decision" class="anchor" href="#the-best-model-selection-decision" aria-hidden="true"><span class="octicon octicon-link"></span></a>The Best Model Selection Decision</h3>
+<p>The best model is that of randomForest due to higher accuracy in predicting “classe” The Random Forest algorithm performed better than rpart. Accuracy for Random Forest model was 0.995 (95% CI: (0.993, 0.997)) compared to 0.739 (95% CI: (0.727, 0.752)) for Decision Tree model. The random Forest model is choosen. The accuracy of the model is 0.995. The expected out-of-sample error is estimated at 0.005, or 0.5%. The expected out-of-sample error is calculated as 1 - accuracy for predictions made against the cross-validation set. Our Test data set comprises 20 cases. With an accuracy above 99% on our cross-validation data, we can expect that very few, or none, of the test samples will be missclassified.</p>
+<pre><code>model2&lt;-rfModel
+model2$finalModel</code></pre>
+<pre><code>## NULL</code></pre>
+</div>
+
+<div id="the-model-submission">
+<h3>
+<a id="the-model-submission" class="anchor" href="#the-model-submission" aria-hidden="true"><span class="octicon octicon-link"></span></a>The Model Submission</h3>
+</div>
+
+<p></p>
+</div>
+</div>
+
+<div id="predict-outcome-levels-on-the-original-testing-data-set-using-random-forest-algorithm">
+<h1>
+<a id="predict-outcome-levels-on-the-original-testing-data-set-using-random-forest-algorithm" class="anchor" href="#predict-outcome-levels-on-the-original-testing-data-set-using-random-forest-algorithm" aria-hidden="true"><span class="octicon octicon-link"></span></a>predict outcome levels on the original Testing data set using Random Forest algorithm</h1>
+<pre><code>predictfinal &lt;- predict(model2, testingset, type="class")
+predictfinal</code></pre>
+<pre><code>##  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 
+##  B  A  B  A  A  E  D  B  A  A  B  C  B  A  E  E  A  B  B  B 
+## Levels: A B C D E</code></pre>
+<pre><code>pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+
+pml_write_files(predictfinal)</code></pre>
+</div>
+
+<p></p>
+</div>
+
+
+
+
+
+
+
+<p>
+</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">GitHub.io maintained by <a href="https://github.com/FHasbani">FHasbani</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
